@@ -2,19 +2,13 @@ import {
   AcceptOptionCommand,
   SelectNextOptionCommand,
   SelectPreviousOptionCommand
-} from "../commands/UI/UICommands.js";
+} from "../input/commands/UI/UICommands.js";
 
 export default class UI {
 
   constructor(options = []) {
     this.options = options;
     this.selectedIndex = 0;
-    this.keyCommandMap = {
-      KeyS: new SelectNextOptionCommand(),
-      KeyW: new SelectPreviousOptionCommand(),
-      // Enter: new AcceptOptionCommand(),
-      Space: new AcceptOptionCommand(),
-    };
   }
 
   setOptions(options) {
@@ -26,12 +20,17 @@ export default class UI {
     return this.options[this.selectedIndex];
   }
 
-  handleInput(inputHandler) {
-    for (const key of inputHandler.getJustPressedKeys()) {
-      const command = this.keyCommandMap[key];
-      if (command) {
-        command.execute(this);
-      }
+  handleInput(inputMapper) {
+    if (inputMapper.wasActionPressed("up")) {
+      new SelectPreviousOptionCommand().execute(this);
+    }
+
+    if (inputMapper.wasActionPressed("down")) {
+      new SelectNextOptionCommand().execute(this);
+    }
+
+    if (inputMapper.wasActionPressed("select")) {
+      new AcceptOptionCommand().execute(this);
     }
   }
 

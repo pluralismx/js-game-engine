@@ -1,4 +1,4 @@
-export default class MenuScene {
+export default class MainMenu {
   constructor() {
     this.options = [
       "level 1",

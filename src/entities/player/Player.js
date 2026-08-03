@@ -1,38 +1,43 @@
 import Entity from '../../core/Entity.js';
-import {
-  JumpCommand,
-  MoveLeftCommand,
-  MoveRightCommand,
-} from "../../commands/Player/PlayerCommands.js";
+import IdleState from './states/IdleState.js';
 
 export default class Player extends Entity {
   constructor(x, y) {
     super(x, y);
-    this.width = 32;
-    this.height = 32;
     this.color = 'blue';
-    this.speed = 2;
-    this.jumpPower = 20;
-
-    // Mapeo de teclas físicas a comandos
-    this.keyCommandMap = {
-      KeyA: new MoveLeftCommand(),
-      KeyD: new MoveRightCommand(),
-      Space: new JumpCommand(),
-    };
+    this.speed = 4;
+    this.jumpPower = -12;
+    this.friction = 0.85;
+    
+    // Iniciar la máquina de estados
+    this.currentState = null;
+    this.changeState(new IdleState());
   }
 
-  handleInput(inputHandler) {
-    for (const key of inputHandler.getPressedKeys()) {
-      const command = this.keyCommandMap[key];
-      if (command) {
-        command.execute(this);
-      }
+  changeState(newState) {
+    if (this.currentState) {
+      this.currentState.exit(this);
+    }
+    
+    this.currentState = newState;
+    this.currentState.enter(this);
+  }
+
+  handleInput(inputMapper) {
+    // Delegar los inputs al estado actual
+    if (this.currentState) {
+      this.currentState.handleInput(this, inputMapper);
     }
   }
 
-  update(deltaTime) {
-    // lógica adicional si se necesita (gravedad, animaciones, etc.)
+  update(deltaTime, tilemap) {
+    // 1. Aplicar físicas básicas y colisiones
+    super.update(deltaTime, tilemap);
+    
+    // 2. Permitir que el estado actual ejecute su lógica por frame (como checar si aterrizamos)
+    if (this.currentState) {
+      this.currentState.update(this, deltaTime, tilemap);
+    }
   }
 
   render(ctx) {

@@ -1,6 +1,6 @@
-import Level1 from "../scenes/Level1.js";
-import InputHandler from "../core/InputHandler.js";
-
+import Level7 from "../scenes/levels/Level7.js";
+import InputHandler from "../input/InputHandler.js";
+import InputMapper from "../input/InputMapper.js";
 export default class Engine {
 
   constructor() {
@@ -8,6 +8,7 @@ export default class Engine {
     this.ctx = null;
     this.currentScene = null;
     this.inputHandler = new InputHandler();
+    this.inputMapper = new InputMapper(this.inputHandler);
   }
 
   boot() {
@@ -32,8 +33,8 @@ export default class Engine {
   }
 
   loadInitialScene() {
-    const level1 = new Level1();
-    this.setScene(level1);
+    const level7 = new Level7();
+    this.setScene(level7);
   }
 
   setScene(scene) {
@@ -42,7 +43,7 @@ export default class Engine {
 
   processInput() {
     if (this.currentScene?.handleInput) {
-      this.currentScene.handleInput(this.inputHandler);
+      this.currentScene.handleInput(this.inputMapper);
     }
   }
 
