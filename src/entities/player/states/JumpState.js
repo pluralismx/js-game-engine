@@ -5,12 +5,12 @@ import { JumpCommand, MoveLeftCommand, MoveRightCommand } from '../../../input/c
 
 export default class JumpState extends State {
   enter(player) {
-    // Al entrar al estado, ejecutamos el salto
+    // Iniciamos SOLO la animación de subida
+    player.animator.play('jump_rise');
     new JumpCommand().execute(player);
   }
 
   handleInput(player, inputMapper) {
-    // Control en el aire
     if (inputMapper.isActionHeld("moveLeft")) {
       new MoveLeftCommand().execute(player);
     } 
@@ -20,13 +20,17 @@ export default class JumpState extends State {
   }
 
   update(player, deltaTime, tilemap) {
-    // Si tocamos el suelo, decidimos a qué estado pasar
+    // Magia visual: Si empezamos a caer, cambiamos al fotograma congelado
+    if (player.vy > 0) {
+      // Como 'fall' es otro clip, el animator se encargará de mostrar ese fotograma
+      player.animator.play('fall'); 
+    }
+
+    // Lógica de tocar el suelo
     if (player.isOnGround) {
-      // Si casi no tenemos velocidad horizontal, volvemos a Idle
       if (Math.abs(player.vx) < 0.1) {
         player.changeState(new IdleState());
       } else {
-        // Si seguimos moviéndonos al aterrizar, pasamos a Walk
         player.changeState(new WalkState());
       }
     }

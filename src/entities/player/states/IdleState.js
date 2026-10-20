@@ -4,8 +4,13 @@ import JumpState from './JumpState.js';
 
 export default class IdleState extends State {
   enter(player) {
-    // Cuando entramos en reposo, nos aseguramos de que no haya velocidad residual
-    player.setVelocityX(0); 
+    console.log("Entrando a IdleState..."); // <-- Test 1
+    
+    // Comenta esto temporalmente por si está causando un error oculto
+    // player.setVelocityX(0); 
+    
+    player.animator.play('idle');
+    console.log("¡Se le dio play al Animator!"); // <-- Test 2
   }
 
   handleInput(player, inputMapper) {

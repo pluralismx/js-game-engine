@@ -1,24 +1,26 @@
 export default class Entity {
   constructor(x = 0, y = 0) {
+    // --- 1. PROPIEDADES DE DIBUJO ---
     this.x = x;
     this.y = y;
-    
-    // Dimensiones por defecto
     this.width = 32;
     this.height = 32;
 
-    // Velocidad actual
+    // --- 2. PROPIEDADES DE MOVIMIENTO (FÍSICA KINEMÁTICA) ---
     this.vx = 0;
     this.vy = 0;
-
-    // Propiedades físicas
     this.gravity = 0.5;
     this.maxFallSpeed = 12;
     this.friction = 0.8;
     this.speed = 4;
     
-    // Flags de estado
+    // --- 3. PROPIEDADES DE ESTADO ---
+    this.isOnGround = false;
     this.isMovingH = false;
+
+    // --- 4. LAS CAJAS DE COLISIÓN (Se inicializan nulas por defecto) ---
+    this.collisionBox = null; // Para chocar con paredes y piso
+    this.hurtbox = null;    // Para recibir daño
   }
 
   setPosition(x, y) {
@@ -40,51 +42,64 @@ export default class Entity {
   }
 
   update(deltaTime, tilemap = null) {
-    // 1. Aplicar la gravedad (la velocidad Y siempre intenta ir hacia abajo)
+    // 1. Aplicar la gravedad
     this.vy += this.gravity;
+    if (this.vy > this.maxFallSpeed) this.vy = this.maxFallSpeed;
 
-    // Limitar la velocidad de caída
-    if (this.vy > this.maxFallSpeed) {
-      this.vy = this.maxFallSpeed;
-    }
-
-    // 2. Aplicar fricción (solo si el jugador NO está moviéndose activamente)
-    if (!this.isMovingH) {
-      this.vx *= this.friction;
-    }
-    this.isMovingH = false; // Resetear para el siguiente frame
-
-    // 3. Frenado en seco si es muy lento (evita moverse en micro-decimales)
-    if (Math.abs(this.vx) < 0.1) {
-      this.vx = 0;
-    }
+    // 2. Aplicar fricción y frenado
+    if (!this.isMovingH) this.vx *= this.friction;
+    this.isMovingH = false; 
+    if (Math.abs(this.vx) < 0.1) this.vx = 0;
 
     // --- FÍSICA Y COLISIONES CON EL MAPA ---
     if (tilemap) {
-      // 3. Mover en el eje X y resolver colisiones
+      
+      // -- EJE X --
       this.x += this.vx;
-      if (tilemap.checkCollision(this)) {
-        // Si chocamos, regresamos a la posición anterior exacta y perdemos velocidad
-        this.x -= this.vx; 
+      this.updateBoxes(); // 1. Sincronizamos la caja con la nueva posición X
+      
+      // 2. Usamos la collisionBox si existe, de lo contrario usamos la Entidad entera (fallback)
+      const boxX = this.collisionBox ? this.collisionBox : this;
+
+      if (tilemap.checkCollision(boxX)) {
+        this.x -= this.vx; // ¡Choque! Regresamos a la posición anterior
         this.vx = 0;
+        this.updateBoxes(); // Sincronizamos la caja a la posición corregida
       }
 
-      // 4. Mover en el eje Y y resolver colisiones
+      // -- EJE Y --
       this.y += this.vy;
-      if (tilemap.checkCollision(this)) {
-        // Guardamos un pequeño flag para saber si tocamos el piso
+      this.updateBoxes(); // 3. Sincronizamos la caja con la nueva posición Y
+
+      const boxY = this.collisionBox ? this.collisionBox : this;
+
+      if (tilemap.checkCollision(boxY)) {
         this.isOnGround = this.vy > 0;
         
-        // Si chocamos, regresamos a la posición anterior y perdemos velocidad
-        this.y -= this.vy; 
+        this.y -= this.vy; // ¡Choque! Regresamos a la posición anterior
         this.vy = 0;
+        this.updateBoxes(); // Sincronizamos la caja a la posición corregida
       } else {
-        this.isOnGround = false; // Estamos cayendo o saltando
+        this.isOnGround = false; 
       }
+
     } else {
-      // Movimiento simple si no hay mapa cargado
+      // Movimiento simple si no hay mapa
       this.x += this.vx;
       this.y += this.vy;
+      this.updateBoxes();
+    }
+  }
+
+  updateBoxes() {
+    // isFacingRight puede venir de la subclase Player. Si no existe, asume true.
+    const facingRight = this.isFacingRight !== undefined ? this.isFacingRight : true;
+
+    if (this.collisionBox) {
+      this.collisionBox.update(this.x, this.y, this.width, facingRight);
+    }
+    if (this.hurtbox) {
+      this.hurtbox.update(this.x, this.y, this.width, facingRight);
     }
   }
 

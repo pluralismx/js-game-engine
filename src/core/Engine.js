@@ -1,6 +1,8 @@
-import Level7 from "../scenes/levels/Level7.js";
+import { GAME_CONFIG } from "./config.js";
+import Level1 from "../scenes/levels/Level1.js";
 import InputHandler from "../input/InputHandler.js";
 import InputMapper from "../input/InputMapper.js";
+
 export default class Engine {
 
   constructor() {
@@ -11,9 +13,9 @@ export default class Engine {
     this.inputMapper = new InputMapper(this.inputHandler);
   }
 
-  boot() {
-    this.createCanvas(800, 450);
-    this.loadInitialScene();
+  async boot() {
+    this.createCanvas(GAME_CONFIG.CANVAS_WIDTH, GAME_CONFIG.CANVAS_HEIGHT);
+    await this.loadInitialScene();
     this.start();
   }
 
@@ -32,9 +34,17 @@ export default class Engine {
 
   }
 
-  loadInitialScene() {
-    const level7 = new Level7();
-    this.setScene(level7);
+  async loadInitialScene() {
+    const level1 = new Level1();
+    this.setScene(level1);
+
+    if (this.currentScene.preload) {
+      await this.currentScene.preload();
+    }
+
+    if (this.currentScene.create) {
+      this.currentScene.create();
+    }
   }
 
   setScene(scene) {

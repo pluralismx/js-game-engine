@@ -4,6 +4,11 @@ import JumpState from "./JumpState.js";
 import { MoveLeftCommand, MoveRightCommand } from "../../../input/commands/Player/PlayerCommands.js";
 
 export default class WalkState extends State {
+  
+  enter(player) {
+    player.animator.play('walk');
+  }
+  
   handleInput(player, inputMapper) {
     let isMoving = false;
 
